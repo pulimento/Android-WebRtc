@@ -20,6 +20,7 @@ import org.webrtc.MediaConstraints;
 import org.webrtc.MediaStream;
 import org.webrtc.PeerConnection;
 import org.webrtc.PeerConnectionFactory;
+import org.webrtc.RtpReceiver;
 import org.webrtc.SessionDescription;
 
 import java.io.BufferedInputStream;
@@ -85,8 +86,12 @@ public class DataChannelActivity extends AppCompatActivity {
     }
 
     private void initializePeerConnectionFactory() {
-        PeerConnectionFactory.initializeAndroidGlobals(this, true, true, true);
-        factory = new PeerConnectionFactory(null);
+        //PeerConnectionFactory.initializeAndroidGlobals(this, true, true, true);
+        PeerConnectionFactory.initialize(PeerConnectionFactory.InitializationOptions.builder(this).setEnableVideoHwAcceleration(false).createInitializationOptions());
+
+        //factory = new PeerConnectionFactory(null);
+        factory = PeerConnectionFactory.builder().createPeerConnectionFactory();
+        //factory.setVideoHwAccelerationOptions(rootEglBase.getEglBaseContext(), rootEglBase.getEglBaseContext());
     }
 
     private void initializePeerConnections() {
@@ -178,6 +183,11 @@ public class DataChannelActivity extends AppCompatActivity {
             @Override
             public void onIceCandidatesRemoved(IceCandidate[] iceCandidates) {
                 Log.d(TAG, "onIceCandidatesRemoved: ");
+            }
+
+            @Override
+            public void onAddTrack(RtpReceiver rtpReceiver, MediaStream[] mediaStreams) {
+                Log.d(TAG, "onAddTrack: ");
             }
 
             @Override

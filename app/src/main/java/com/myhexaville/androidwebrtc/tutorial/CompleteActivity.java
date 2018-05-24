@@ -22,6 +22,7 @@ import org.webrtc.MediaConstraints;
 import org.webrtc.MediaStream;
 import org.webrtc.PeerConnection;
 import org.webrtc.PeerConnectionFactory;
+import org.webrtc.RtpReceiver;
 import org.webrtc.SessionDescription;
 import org.webrtc.VideoCapturer;
 import org.webrtc.VideoRenderer;
@@ -235,8 +236,11 @@ public class CompleteActivity extends AppCompatActivity {
     }
 
     private void initializePeerConnectionFactory() {
-        PeerConnectionFactory.initializeAndroidGlobals(this, true, true, true);
-        factory = new PeerConnectionFactory(null);
+        //PeerConnectionFactory.initializeAndroidGlobals(this, true, true, true);
+        PeerConnectionFactory.initialize(PeerConnectionFactory.InitializationOptions.builder(this).setEnableVideoHwAcceleration(true).createInitializationOptions());
+
+        //factory = new PeerConnectionFactory(null);
+        factory = PeerConnectionFactory.builder().createPeerConnectionFactory();
         factory.setVideoHwAccelerationOptions(rootEglBase.getEglBaseContext(), rootEglBase.getEglBaseContext());
     }
 
@@ -311,6 +315,22 @@ public class CompleteActivity extends AppCompatActivity {
             @Override
             public void onIceCandidatesRemoved(IceCandidate[] iceCandidates) {
                 Log.d(TAG, "onIceCandidatesRemoved: ");
+            }
+
+            @Override
+            public void onAddTrack(RtpReceiver rtpReceiver, MediaStream[] mediaStreams) {
+
+                if(mediaStreams.length == 0) {
+                    Log.e("MediaStreamAct","Empty mediaStreams array");
+                    return;
+                }
+
+                MediaStream mediaStream = mediaStreams[0];
+
+                Log.d(TAG, "onAddStream: " + mediaStream.videoTracks.size());
+                VideoTrack remoteVideoTrack = mediaStream.videoTracks.get(0);
+                remoteVideoTrack.setEnabled(true);
+                remoteVideoTrack.addRenderer(new VideoRenderer(binding.surfaceView2));
             }
 
             @Override

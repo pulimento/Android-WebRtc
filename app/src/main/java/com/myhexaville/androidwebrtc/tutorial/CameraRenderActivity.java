@@ -41,8 +41,16 @@ public class CameraRenderActivity extends AppCompatActivity {
         binding.surfaceView.setEnableHardwareScaler(true);
         binding.surfaceView.setMirror(true);
 
-        PeerConnectionFactory.initializeAndroidGlobals(this, true, true, true);
-        PeerConnectionFactory factory = new PeerConnectionFactory(null);
+        //PeerConnectionFactory.initializeAndroidGlobals(this, true, true, true);
+        // Can enable HW acceleration
+        PeerConnectionFactory.initialize(
+                PeerConnectionFactory.InitializationOptions.builder(this)
+                    .setEnableVideoHwAcceleration(true)
+                    .createInitializationOptions());
+
+        //PeerConnectionFactory factory = new PeerConnectionFactory(null);
+        PeerConnectionFactory factory = PeerConnectionFactory.builder().createPeerConnectionFactory();
+
         factory.setVideoHwAccelerationOptions(rootEglBase.getEglBaseContext(), rootEglBase.getEglBaseContext());
 
         createVideoTrackFromCameraAndShowIt(factory);

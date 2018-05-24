@@ -30,6 +30,7 @@ import org.webrtc.PeerConnection;
 import org.webrtc.PeerConnection.IceConnectionState;
 import org.webrtc.PeerConnectionFactory;
 import org.webrtc.RtpParameters;
+import org.webrtc.RtpReceiver;
 import org.webrtc.RtpSender;
 import org.webrtc.SdpObserver;
 import org.webrtc.SessionDescription;
@@ -357,7 +358,7 @@ public class PeerConnectionClient {
     }
 
     private void createPeerConnectionFactoryInternal(Context context) {
-        PeerConnectionFactory.initializeInternalTracer();
+        //PeerConnectionFactory.initializeInternalTracer();
         if (peerConnectionParameters.tracing) {
             PeerConnectionFactory.startInternalTracingCapture(
                     Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator
@@ -424,10 +425,18 @@ public class PeerConnectionClient {
         }
 
         // Create peer connection factory.
+        /*
         if (!PeerConnectionFactory.initializeAndroidGlobals(
                 context, true, true, peerConnectionParameters.videoCodecHwAcceleration)) {
             events.onPeerConnectionError("Failed to initializeAndroidGlobals");
         }
+        */
+        PeerConnectionFactory.initialize(
+                PeerConnectionFactory.InitializationOptions.builder(context)
+                        .setEnableVideoHwAcceleration(true)
+                        .createInitializationOptions());
+
+
         if (options != null) {
             Log.d(TAG, "Factory networkIgnoreMask option: " + options.networkIgnoreMask);
         }
@@ -1079,6 +1088,33 @@ public class PeerConnectionClient {
         @Override
         public void onIceConnectionReceivingChange(boolean receiving) {
             Log.d(TAG, "IceConnectionReceiving changed to " + receiving);
+        }
+
+        @Override
+        public void onAddTrack(RtpReceiver rtpReceiver, MediaStream[] mediaStreams) {
+            executor.execute(() -> {
+
+                if(mediaStreams.length == 0) {
+                    reportError("Empty mediaStreams array");
+                    return;
+                }
+                MediaStream stream = mediaStreams[0];
+
+                if (peerConnection == null || isError) {
+                    return;
+                }
+                if (stream.audioTracks.size() > 1 || stream.videoTracks.size() > 1) {
+                    reportError("Weird-looking stream: " + stream);
+                    return;
+                }
+                if (stream.videoTracks.size() == 1) {
+                    remoteVideoTrack = stream.videoTracks.get(0);
+                    remoteVideoTrack.setEnabled(renderVideo);
+                    for (VideoRenderer.Callbacks remoteRender : remoteRenders) {
+                        remoteVideoTrack.addRenderer(new VideoRenderer(remoteRender));
+                    }
+                }
+            });
         }
 
         @Override
