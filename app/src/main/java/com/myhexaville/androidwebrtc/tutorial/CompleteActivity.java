@@ -111,7 +111,7 @@ public class CompleteActivity extends AppCompatActivity {
 
             socket.on(EVENT_CONNECT, args -> {
                 Log.d(TAG, "SOCKET_RECV: connectToSignallingServer: connect");
-                socket.emit("create or join", "foo");
+                socket.emit("create or join", "foo2");
             }).on("ipaddr", args -> {
                 Log.d(TAG, "SOCKET_RECV: connectToSignallingServer: ipaddr");
             }).on("created", args -> {
@@ -129,7 +129,7 @@ public class CompleteActivity extends AppCompatActivity {
                 isChannelReady = true;
             }).on("log", args -> {
                 for (Object arg : args) {
-                    Log.d(TAG, "SOCKET_RECV: connectToSignallingServer: " + String.valueOf(arg));
+                    Log.d(TAG, "SOCKET_RECV: connectToSignallingServer: LOG" + String.valueOf(arg));
                 }
             }).on("message", args -> {
                 Log.d(TAG, "SOCKET_RECV: connectToSignallingServer: got a message");
@@ -138,6 +138,7 @@ public class CompleteActivity extends AppCompatActivity {
                     if (args[0] instanceof String) {
                         String message = (String) args[0];
                         if (message.equals("got user media")) {
+                            Log.d(TAG, "SOCKET_RECV: connectToSignallingServer: GOT USER MEDIA");
                             maybeStart();
                         }
                     } else {
@@ -151,9 +152,10 @@ public class CompleteActivity extends AppCompatActivity {
                             peerConnection.setRemoteDescription(new SimpleSdpObserver(), new SessionDescription(OFFER, message.getString("sdp")));
                             doAnswer();
                         } else if (message.getString("type").equals("answer") && isStarted) {
+                            Log.d(TAG, "SOCKET_RECV: connectToSignallingServer: ANSWER");
                             peerConnection.setRemoteDescription(new SimpleSdpObserver(), new SessionDescription(ANSWER, message.getString("sdp")));
                         } else if (message.getString("type").equals("candidate") && isStarted) {
-                            Log.d(TAG, "SOCKET_RECV: connectToSignallingServer: receiving candidates");
+                            Log.d(TAG, "SOCKET_RECV: connectToSignallingServer: CANDIDATE receiving candidates");
                             IceCandidate candidate = new IceCandidate(message.getString("id"), message.getInt("label"), message.getString("candidate"));
                             peerConnection.addIceCandidate(candidate);
                         }
@@ -192,7 +194,7 @@ public class CompleteActivity extends AppCompatActivity {
     }
 
     private void maybeStart() {
-        Log.d(TAG, "maybeStart: " + isStarted + " " + isChannelReady);
+        Log.d(TAG, "called maybeStart: " + isStarted + " " + isChannelReady);
         if (!isStarted && isChannelReady) {
             isStarted = true;
             if (isInitiator) {
@@ -307,7 +309,7 @@ public class CompleteActivity extends AppCompatActivity {
                     message.put("id", iceCandidate.sdpMid);
                     message.put("candidate", iceCandidate.sdp);
 
-                    Log.d(TAG, "onIceCandidate: sending candidate " + message);
+                    //Log.d(TAG, "onIceCandidate: sending candidate " + message);
                     sendMessage(message);
                 } catch (JSONException e) {
                     e.printStackTrace();
