@@ -47,7 +47,7 @@ import static org.webrtc.SessionDescription.Type.ANSWER;
 import static org.webrtc.SessionDescription.Type.OFFER;
 
 public class CompleteActivity extends AppCompatActivity {
-    private static final String TAG = "CompleteActivity";
+    private static final String TAG = "CompleteActivityTAG";
     private static final int RC_CALL = 111;
 
     private Socket socket;
@@ -110,29 +110,29 @@ public class CompleteActivity extends AppCompatActivity {
             socket = IO.socket("https://salty-sea-26559.herokuapp.com/");
 
             socket.on(EVENT_CONNECT, args -> {
-                Log.d(TAG, "connectToSignallingServer: connect");
+                Log.d(TAG, "SOCKET_RECV: connectToSignallingServer: connect");
                 socket.emit("create or join", "foo");
             }).on("ipaddr", args -> {
-                Log.d(TAG, "connectToSignallingServer: ipaddr");
+                Log.d(TAG, "SOCKET_RECV: connectToSignallingServer: ipaddr");
             }).on("created", args -> {
-                Log.d(TAG, "connectToSignallingServer: created");
+                Log.d(TAG, "SOCKET_RECV: connectToSignallingServer: created");
                 isInitiator = true;
             }).on("full", args -> {
-                Log.d(TAG, "connectToSignallingServer: full");
+                Log.d(TAG, "SOCKET_RECV: connectToSignallingServer: full");
             }).on("join", args -> {
-                Log.d(TAG, "connectToSignallingServer: join");
-                Log.d(TAG, "connectToSignallingServer: Another peer made a request to join room");
-                Log.d(TAG, "connectToSignallingServer: This peer is the initiator of room");
+                Log.d(TAG, "SOCKET_RECV: connectToSignallingServer: join");
+                Log.d(TAG, "SOCKET_RECV: connectToSignallingServer: Another peer made a request to join room");
+                Log.d(TAG, "SOCKET_RECV: connectToSignallingServer: This peer is the initiator of room");
                 isChannelReady = true;
             }).on("joined", args -> {
-                Log.d(TAG, "connectToSignallingServer: joined");
+                Log.d(TAG, "SOCKET_RECV: connectToSignallingServer: joined");
                 isChannelReady = true;
             }).on("log", args -> {
                 for (Object arg : args) {
-                    Log.d(TAG, "connectToSignallingServer: " + String.valueOf(arg));
+                    Log.d(TAG, "SOCKET_RECV: connectToSignallingServer: " + String.valueOf(arg));
                 }
             }).on("message", args -> {
-                Log.d(TAG, "connectToSignallingServer: got a message");
+                Log.d(TAG, "SOCKET_RECV: connectToSignallingServer: got a message");
             }).on("message", args -> {
                 try {
                     if (args[0] instanceof String) {
@@ -142,9 +142,9 @@ public class CompleteActivity extends AppCompatActivity {
                         }
                     } else {
                         JSONObject message = (JSONObject) args[0];
-                        Log.d(TAG, "connectToSignallingServer: got message " + message);
+                        Log.d(TAG, "SOCKET_RECV: connectToSignallingServer: got message " + message);
                         if (message.getString("type").equals("offer")) {
-                            Log.d(TAG, "connectToSignallingServer: received an offer " + isInitiator + " " + isStarted);
+                            Log.d(TAG, "SOCKET_RECV: connectToSignallingServer: received an offer " + isInitiator + " " + isStarted);
                             if (!isInitiator && !isStarted) {
                                 maybeStart();
                             }
@@ -153,7 +153,7 @@ public class CompleteActivity extends AppCompatActivity {
                         } else if (message.getString("type").equals("answer") && isStarted) {
                             peerConnection.setRemoteDescription(new SimpleSdpObserver(), new SessionDescription(ANSWER, message.getString("sdp")));
                         } else if (message.getString("type").equals("candidate") && isStarted) {
-                            Log.d(TAG, "connectToSignallingServer: receiving candidates");
+                            Log.d(TAG, "SOCKET_RECV: connectToSignallingServer: receiving candidates");
                             IceCandidate candidate = new IceCandidate(message.getString("id"), message.getInt("label"), message.getString("candidate"));
                             peerConnection.addIceCandidate(candidate);
                         }
@@ -165,7 +165,7 @@ public class CompleteActivity extends AppCompatActivity {
                     e.printStackTrace();
                 }
             }).on(EVENT_DISCONNECT, args -> {
-                Log.d(TAG, "connectToSignallingServer: disconnect");
+                Log.d(TAG, "SOCKET_RECV: connectToSignallingServer: disconnect");
             });
             socket.connect();
         } catch (URISyntaxException e) {
@@ -177,6 +177,7 @@ public class CompleteActivity extends AppCompatActivity {
         peerConnection.createAnswer(new SimpleSdpObserver() {
             @Override
             public void onCreateSuccess(SessionDescription sessionDescription) {
+                Log.d(TAG, "DOANSWER: onCreateSuccess: ");
                 peerConnection.setLocalDescription(new SimpleSdpObserver(), sessionDescription);
                 JSONObject message = new JSONObject();
                 try {
@@ -206,7 +207,7 @@ public class CompleteActivity extends AppCompatActivity {
         peerConnection.createOffer(new SimpleSdpObserver() {
             @Override
             public void onCreateSuccess(SessionDescription sessionDescription) {
-                Log.d(TAG, "onCreateSuccess: ");
+                Log.d(TAG, "DOCALL: onCreateSuccess: ");
                 peerConnection.setLocalDescription(new SimpleSdpObserver(), sessionDescription);
                 JSONObject message = new JSONObject();
                 try {
@@ -221,6 +222,7 @@ public class CompleteActivity extends AppCompatActivity {
     }
 
     private void sendMessage(Object message) {
+        Log.d(TAG, "SENDMESSAGE: " + message.toString());
         socket.emit("message", message);
     }
 
@@ -276,27 +278,27 @@ public class CompleteActivity extends AppCompatActivity {
         PeerConnection.Observer pcObserver = new PeerConnection.Observer() {
             @Override
             public void onSignalingChange(PeerConnection.SignalingState signalingState) {
-                Log.d(TAG, "onSignalingChange: ");
+                Log.d(TAG, "PEERCONNOBSERVER: onSignalingChange: ");
             }
 
             @Override
             public void onIceConnectionChange(PeerConnection.IceConnectionState iceConnectionState) {
-                Log.d(TAG, "onIceConnectionChange: ");
+                Log.d(TAG, "PEERCONNOBSERVER: onIceConnectionChange: ");
             }
 
             @Override
             public void onIceConnectionReceivingChange(boolean b) {
-                Log.d(TAG, "onIceConnectionReceivingChange: ");
+                Log.d(TAG, "PEERCONNOBSERVER: onIceConnectionReceivingChange: ");
             }
 
             @Override
             public void onIceGatheringChange(PeerConnection.IceGatheringState iceGatheringState) {
-                Log.d(TAG, "onIceGatheringChange: ");
+                Log.d(TAG, "PEERCONNOBSERVER: onIceGatheringChange: ");
             }
 
             @Override
             public void onIceCandidate(IceCandidate iceCandidate) {
-                Log.d(TAG, "onIceCandidate: ");
+                Log.d(TAG, "PEERCONNOBSERVER: onIceCandidate: ");
                 JSONObject message = new JSONObject();
 
                 try {
@@ -314,20 +316,20 @@ public class CompleteActivity extends AppCompatActivity {
 
             @Override
             public void onIceCandidatesRemoved(IceCandidate[] iceCandidates) {
-                Log.d(TAG, "onIceCandidatesRemoved: ");
+                Log.d(TAG, "PEERCONNOBSERVER: onIceCandidatesRemoved: ");
             }
 
             @Override
             public void onAddTrack(RtpReceiver rtpReceiver, MediaStream[] mediaStreams) {
 
                 if(mediaStreams.length == 0) {
-                    Log.e("MediaStreamAct","Empty mediaStreams array");
+                    Log.e(TAG,"PEERCONNOBSERVER: Empty mediaStreams array");
                     return;
                 }
 
                 MediaStream mediaStream = mediaStreams[0];
 
-                Log.d(TAG, "onAddStream: " + mediaStream.videoTracks.size());
+                Log.d(TAG, "PEERCONNOBSERVER: onAddTrack: " + mediaStream.videoTracks.size());
                 VideoTrack remoteVideoTrack = mediaStream.videoTracks.get(0);
                 remoteVideoTrack.setEnabled(true);
                 remoteVideoTrack.addRenderer(new VideoRenderer(binding.surfaceView2));
@@ -335,7 +337,7 @@ public class CompleteActivity extends AppCompatActivity {
 
             @Override
             public void onAddStream(MediaStream mediaStream) {
-                Log.d(TAG, "onAddStream: " + mediaStream.videoTracks.size());
+                Log.d(TAG, "PEERCONNOBSERVER: onAddStream: " + mediaStream.videoTracks.size());
                 VideoTrack remoteVideoTrack = mediaStream.videoTracks.get(0);
                 remoteVideoTrack.setEnabled(true);
                 remoteVideoTrack.addRenderer(new VideoRenderer(binding.surfaceView2));
@@ -344,17 +346,17 @@ public class CompleteActivity extends AppCompatActivity {
 
             @Override
             public void onRemoveStream(MediaStream mediaStream) {
-                Log.d(TAG, "onRemoveStream: ");
+                Log.d(TAG, "PEERCONNOBSERVER: onRemoveStream: ");
             }
 
             @Override
             public void onDataChannel(DataChannel dataChannel) {
-                Log.d(TAG, "onDataChannel: ");
+                Log.d(TAG, "PEERCONNOBSERVER: onDataChannel: ");
             }
 
             @Override
             public void onRenegotiationNeeded() {
-                Log.d(TAG, "onRenegotiationNeeded: ");
+                Log.d(TAG, "PEERCONNOBSERVER: onRenegotiationNeeded: ");
             }
         };
 
